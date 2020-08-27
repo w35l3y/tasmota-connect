@@ -53,10 +53,10 @@ metadata {
     tiles(scale: 2) {
         multiAttributeTile(name: "fanSpeed", type: "generic", width: 6, height: 4, canChangeIcon: true) {
             tileAttribute("device.fanSpeed", key: "PRIMARY_CONTROL") {
-                attributeState 0, label: "off", action: "raiseFanSpeed", icon: "st.thermostat.fan-off", backgroundColor: "#ffffff", nextState: 1
-                attributeState 1, label: "low", action: "raiseFanSpeed", icon: "st.thermostat.fan-on", backgroundColor: "#00a0dc", nextState: 2
-                attributeState 2, label: "medium", action: "raiseFanSpeed", icon: "st.thermostat.fan-on", backgroundColor: "#00a0dc", nextState: 3
-                attributeState 3, label: "high", action: "raiseFanSpeed", icon: "st.thermostat.fan-on", backgroundColor: "#00a0dc", nextState: 0
+                attributeState "0", label: "off", action: "raiseFanSpeed", icon: "st.thermostat.fan-off", backgroundColor: "#ffffff", nextState: "1"
+                attributeState "1", label: "low", action: "raiseFanSpeed", icon: "st.thermostat.fan-on", backgroundColor: "#00a0dc", nextState: "2"
+                attributeState "2", label: "medium", action: "raiseFanSpeed", icon: "st.thermostat.fan-on", backgroundColor: "#00a0dc", nextState: "3"
+                attributeState "3", label: "high", action: "raiseFanSpeed", icon: "st.thermostat.fan-on", backgroundColor: "#00a0dc", nextState: "0"
             }
             tileAttribute("device.fanSpeed", key: "VALUE_CONTROL") {
                 attributeState "VALUE_UP", action: "raiseFanSpeed"
