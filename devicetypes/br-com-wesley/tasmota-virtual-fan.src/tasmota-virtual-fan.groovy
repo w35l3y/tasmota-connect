@@ -86,20 +86,20 @@ def parseEvents(status, json) {
     if (status as Integer == 200) {
         // rfData
         if (json?.rfData) {
-            def data = parent.childSetting(device.id, ["fanspeed_off", "fanspeed_low", "fanspeed_medium", "fanspeed_high", "fanspeed_max"])
+            def data = parent.childSetting(device.id, ["payload_off", "payload_low", "payload_medium", "payload_high", "payload_max"])
             def found = data.find{ it?.value?.toUpperCase() == json?.rfData?.toUpperCase() }?.key
             if (found) {
                 def rawLevel = 0
-                if (found == "fanspeed_low") {
+                if (found == "payload_low") {
                     rawLevel = 25
                     state.lastFanSpeed = 1
-                } else if (found == "fanspeed_medium") {
+                } else if (found == "payload_medium") {
                     rawLevel = 50
                     state.lastFanSpeed = 2
-                } else if (found == "fanspeed_high") {
+                } else if (found == "payload_high") {
                     rawLevel = 75
                     state.lastFanSpeed = 3
-                } else if (found == "fanspeed_max") {
+                } else if (found == "payload_max") {
                     rawLevel = 100
                     state.lastFanSpeed = 4
                 }
@@ -113,20 +113,20 @@ def parseEvents(status, json) {
         }
         // irData
         if (json?.irData) {
-            def data = parent.childSetting(device.id, ["fanspeed_off", "fanspeed_low", "fanspeed_medium", "fanspeed_high", "fanspeed_max"])
+            def data = parent.childSetting(device.id, ["payload_off", "payload_low", "payload_medium", "payload_high", "payload_max"])
             def found = data.find{ it?.value?.toUpperCase() == json?.irData?.toUpperCase() }?.key
             if (found) {
                 def rawLevel = 0
-                if (found == "fanspeed_low") {
+                if (found == "payload_low") {
                     rawLevel = 25
                     state.lastFanSpeed = 1
-                } else if (found == "fanspeed_medium") {
+                } else if (found == "payload_medium") {
                     rawLevel = 50
                     state.lastFanSpeed = 2
-                } else if (found == "fanspeed_high") {
+                } else if (found == "payload_high") {
                     rawLevel = 75
                     state.lastFanSpeed = 3
-                } else if (found == "fanspeed_max") {
+                } else if (found == "payload_max") {
                     rawLevel = 100
                     state.lastFanSpeed = 4
                 }
