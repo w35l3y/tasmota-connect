@@ -24,7 +24,6 @@ metadata {
         capability "Fan Speed"
         capability "Actuator"
         capability "Configuration"
-//        capability "Sensor"
         capability "Health Check"
         capability "Signal Strength"
 
@@ -33,6 +32,7 @@ metadata {
         command "low"
         command "medium"
         command "high"
+        command "max"
         command "raiseFanSpeed"
         command "lowerFanSpeed"
     }
@@ -56,7 +56,8 @@ metadata {
                 attributeState "0", label: "off", action: "raiseFanSpeed", icon: "st.thermostat.fan-off", backgroundColor: "#ffffff", nextState: "1"
                 attributeState "1", label: "low", action: "raiseFanSpeed", icon: "st.thermostat.fan-on", backgroundColor: "#00a0dc", nextState: "2"
                 attributeState "2", label: "medium", action: "raiseFanSpeed", icon: "st.thermostat.fan-on", backgroundColor: "#00a0dc", nextState: "3"
-                attributeState "3", label: "high", action: "raiseFanSpeed", icon: "st.thermostat.fan-on", backgroundColor: "#00a0dc", nextState: "0"
+                attributeState "3", label: "high", action: "raiseFanSpeed", icon: "st.thermostat.fan-on", backgroundColor: "#00a0dc", nextState: "4"
+                attributeState "4", label: "max", action: "raiseFanSpeed", icon: "st.thermostat.fan-on", backgroundColor: "#00a0dc", nextState: "0"
             }
             tileAttribute("device.fanSpeed", key: "VALUE_CONTROL") {
                 attributeState "VALUE_UP", action: "raiseFanSpeed"
@@ -85,51 +86,57 @@ def parseEvents(status, json) {
     if (status as Integer == 200) {
         // rfData
         if (json?.rfData) {
-            def data = parent.childSetting(device.id, ["fanspeed_off", "fanspeed_low", "fanspeed_medium", "fanspeed_high"])
+            def data = parent.childSetting(device.id, ["fanspeed_off", "fanspeed_low", "fanspeed_medium", "fanspeed_high", "fanspeed_max"])
             def found = data.find{ it?.value?.toUpperCase() == json?.rfData?.toUpperCase() }?.key
-						if (found) {
-	            def rawLevel = 0
-			        if (found == "fanspeed_low") {
-                rawLevel = 33
-                state.lastFanSpeed = 1
-			        } else if (found == "fanspeed_medium") {
-                rawLevel = 66
-                state.lastFanSpeed = 2
-			        } else if (found == "fanspeed_high") {
-                rawLevel = 100
-                state.lastFanSpeed = 3
-			        }
-		          def value = (rawLevel ? "on" : "off")
-							def fanSpeed = rawLevel ? state.lastFanSpeed : 0
-		          events << sendEvent(name: "switch", value: value)
-		          events << sendEvent(name: "level", value: rawLevel)
-		          events << sendEvent(name: "fanSpeed", value: fanSpeed)
-		          log.debug "Fan switch: '" + value + "', level: '${rawLevel}', fanSpeed: '${fanSpeed}'"
-						}
+            if (found) {
+                def rawLevel = 0
+                if (found == "fanspeed_low") {
+                    rawLevel = 25
+                    state.lastFanSpeed = 1
+                } else if (found == "fanspeed_medium") {
+                    rawLevel = 50
+                    state.lastFanSpeed = 2
+                } else if (found == "fanspeed_high") {
+                    rawLevel = 75
+                    state.lastFanSpeed = 3
+                } else if (found == "fanspeed_max") {
+                    rawLevel = 100
+                    state.lastFanSpeed = 4
+                }
+                def value = (rawLevel ? "on" : "off")
+                def fanSpeed = rawLevel ? state.lastFanSpeed : 0
+                events << sendEvent(name: "switch", value: value)
+                events << sendEvent(name: "level", value: rawLevel)
+                events << sendEvent(name: "fanSpeed", value: fanSpeed)
+                log.debug "Fan switch: '" + value + "', level: '${rawLevel}', fanSpeed: '${fanSpeed}'"
+            }
         }
         // irData
         if (json?.irData) {
-            def data = parent.childSetting(device.id, ["payload_on", "payload_off"])
+            def data = parent.childSetting(device.id, ["fanspeed_off", "fanspeed_low", "fanspeed_medium", "fanspeed_high", "fanspeed_max"])
             def found = data.find{ it?.value?.toUpperCase() == json?.irData?.toUpperCase() }?.key
-						if (found) {
-	            def rawLevel = 0
-			        if (found == "fanspeed_low") {
-                rawLevel = 33
-                state.lastFanSpeed = 1
-			        } else if (found == "fanspeed_medium") {
-                rawLevel = 66
-                state.lastFanSpeed = 2
-			        } else if (found == "fanspeed_high") {
-                rawLevel = 100
-                state.lastFanSpeed = 3
-			        }
-		          def value = (rawLevel ? "on" : "off")
-							def fanSpeed = rawLevel ? state.lastFanSpeed : 0
-		          events << sendEvent(name: "switch", value: value)
-		          events << sendEvent(name: "level", value: rawLevel)
-		          events << sendEvent(name: "fanSpeed", value: fanSpeed)
-		          log.debug "Fan switch: '" + value + "', level: '${rawLevel}', fanSpeed: '${fanSpeed}'"
-						}
+            if (found) {
+                def rawLevel = 0
+                if (found == "fanspeed_low") {
+                    rawLevel = 25
+                    state.lastFanSpeed = 1
+                } else if (found == "fanspeed_medium") {
+                    rawLevel = 50
+                    state.lastFanSpeed = 2
+                } else if (found == "fanspeed_high") {
+                    rawLevel = 75
+                    state.lastFanSpeed = 3
+                } else if (found == "fanspeed_max") {
+                    rawLevel = 100
+                    state.lastFanSpeed = 4
+                }
+                def value = (rawLevel ? "on" : "off")
+                def fanSpeed = rawLevel ? state.lastFanSpeed : 0
+                events << sendEvent(name: "switch", value: value)
+                events << sendEvent(name: "level", value: rawLevel)
+                events << sendEvent(name: "fanSpeed", value: fanSpeed)
+                log.debug "Fan switch: '" + value + "', level: '${rawLevel}', fanSpeed: '${fanSpeed}'"
+            }
         }
         // Bridge's Signal Strength
         if (json?.Wifi) {
@@ -147,35 +154,31 @@ def parseEvents(status, json) {
 def setLevel(value, rate = null) {
     def level = Math.max(Math.min(value as Integer, 100), 0)
 
-		if (66 < level) {
-    		return high()
+    if (75 < level) {
+        return max()
     }
-		if (33 < level) {
+    if (50 < level) {
+        return high()
+    }
+    if (25 < level) {
         return medium()
     }
-		if (0 < level) {
+    if (0 < level) {
         return low()
     }
     return off()
 }
 
 def setFanSpeed(speed) {
-    if (speed == 1) {
-        return low()
-    } else if (speed == 2) {
-        return medium()
-    } else if (speed == 3) {
-        return high()
-    }
-    return off()
+	return setLevel(25 * speed)
 }
 
 def raiseFanSpeed() {
-    setFanSpeed(((device.currentValue("fanSpeed") as Integer) + 1) % 4)
+    setFanSpeed(((device.currentValue("fanSpeed") as Integer) + 1) % 5)
 }
 
 def lowerFanSpeed() {
-    setFanSpeed(((device.currentValue("fanSpeed") as Integer) + 3) % 4)
+    setFanSpeed(((device.currentValue("fanSpeed") as Integer) + 4) % 5)
 }
 
 def on() {
@@ -186,48 +189,35 @@ def on() {
     }
 }
 
-def off() {
+def execute (cmd, fanSpeed) {
     def bridge = parent.childSetting(device.id, "bridge") ?: null
-    def command = parent.childSetting(device.id, "command_off") ?: null
+    def command = parent.childSetting(device.id, cmd) ?: null
     if (bridge && command) {
         parent.callTasmota(bridge, command)
-        sendEvent(name: "switch", value: "off")
-        sendEvent(name: "level", value: 0)
-        sendEvent(name: "fanSpeed", value: 0, isStateChange: true)
+        sendEvent(name: "switch", value: fanSpeed?"on":"off")
+        sendEvent(name: "level", value: 25 * fanSpeed)
+        sendEvent(name: "fanSpeed", value: fanSpeed, isStateChange: true)
     }
+}
+
+def off() {
+	execute("command_off", 0)
 }
 
 def low() {
-    def bridge = parent.childSetting(device.id, "bridge") ?: null
-    def command = parent.childSetting(device.id, "command_low") ?: null
-    if (bridge && command) {
-        parent.callTasmota(bridge, command)
-        sendEvent(name: "switch", value: "on")
-        sendEvent(name: "level", value: 33)
-        sendEvent(name: "fanSpeed", value: 1, isStateChange: true)
-    }
+	execute("command_low", 1)
 }
 
 def medium() {
-    def bridge = parent.childSetting(device.id, "bridge") ?: null
-    def command = parent.childSetting(device.id, "command_medium") ?: null
-    if (bridge && command) {
-        parent.callTasmota(bridge, command)
-        sendEvent(name: "switch", value: "on")
-        sendEvent(name: "level", value: 66)
-        sendEvent(name: "fanSpeed", value: 2, isStateChange: true)
-    }
+	execute("command_medium", 2)
 }
 
 def high() {
-    def bridge = parent.childSetting(device.id, "bridge") ?: null
-    def command = parent.childSetting(device.id, "command_high") ?: null
-    if (bridge && command) {
-        parent.callTasmota(bridge, command)
-        sendEvent(name: "switch", value: "on")
-        sendEvent(name: "level", value: 100)
-        sendEvent(name: "fanSpeed", value: 3, isStateChange: true)
-    }
+	execute("command_high", 3)
+}
+
+def max() {
+	execute("command_max", 4)
 }
 
 def ping() {
@@ -238,7 +228,8 @@ def installed() {
     state?.lastFanSpeed = 2
     sendEvent(name: "checkInterval", value: 30 * 60 + 2 * 60, displayed: false, data: [protocol: "lan", hubHardwareId: device.hub.hardwareID])
     sendEvent(name: "switch", value: "off")
-		sendEvent(name: "fanSpeed", value: 0)
+    sendEvent(name: "level", value: 0)
+    sendEvent(name: "fanSpeed", value: 0)
 }
 
 def updated() {

@@ -156,6 +156,10 @@ def configureDevice(params){
                         title: "Command to send for 'Fan Speed HIGH'",
                         description: "Tap to set",
                         defaultValue: "", required: false, submitOnChange: true)
+                input("dev:${state.currentId}:command_max", "text",
+                        title: "Command to send for 'Fan Speed MAX'",
+                        description: "Tap to set",
+                        defaultValue: "", required: false, submitOnChange: true)
                 input("dev:${state.currentId}:track_state", "bool",
                         title: "State tracking",
                         description: "Enable real-time tracking",
@@ -178,11 +182,16 @@ def configureDevice(params){
                         title: "Code that represents the 'HIGH' state",
                         description: "Tap to set",
                         defaultValue: "", required: false)
+                    input("dev:${state.currentId}:payload_max", "text",
+                        title: "Code that represents the 'MAX' state",
+                        description: "Tap to set",
+                        defaultValue: "", required: false)
                 } else {
                     deleteChildSetting(state.currentId, "payload_off")
                     deleteChildSetting(state.currentId, "payload_low")
                     deleteChildSetting(state.currentId, "payload_medium")
                     deleteChildSetting(state.currentId, "payload_high")
+                    deleteChildSetting(state.currentId, "payload_max")
                 }
             }
         }
@@ -395,7 +404,7 @@ def addDeviceConfirm() {
     if (virtualDeviceType) {
         def selectedDevice = moduleMap().find{ it.key == virtualDeviceType }.value
         try {
-            def virtualParent = addChildDevice("hongtat", selectedDevice?.type, "AWFULLYSMART-tasmota-${latestDni}", getHub()?.id, [
+            def virtualParent = addChildDevice(selectedDevice?.namespace?:"hongtat", selectedDevice?.type, "AWFULLYSMART-tasmota-${latestDni}", getHub()?.id, [
                     "completedSetup": true,
                     "label": deviceName
             ])
@@ -631,7 +640,7 @@ def moduleMap() {
         "1117": [name: "Virtual Contact Sensor", type: "Tasmota Virtual Contact Sensor"],
         "1118": [name: "Virtual Motion Sensor", type: "Tasmota Virtual Motion Sensor"],
         "1119": [name: "Virtual Air Conditioner", type: "Tasmota Virtual Air Conditioner"],
-        "1120": [name: "Virtual Fan", type: "Tasmota Virtual Fan"]
+        "1120": [name: "Virtual Fan", type: "Tasmota Virtual Fan", namespace: "br.com.wesley"]
     ]
     def defaultModule = [
         "Tasmota Generic Switch":          [channel: 1, messaging: false,   virtual: false, child: ["Tasmota Child Switch Device"], settings: ["ip"]],
@@ -721,7 +730,7 @@ def deleteChildSetting(id, name=null) {
         }
     } else if (id && name==null) {
         // otherwise, delete everything
-        ["ip", "username", "password", "bridge", "command_on", "command_off", "track_state", "payload_on", "payload_off", "off_delay", "command_low", "command_medium", "command_high", "payload_low", "payload_medium", "payload_high", "command_open", "command_close", "command_pause", "payload_open", "payload_close", "payload_pause", "payload_active", "payload_inactive", "hvac"].each { n ->
+        ["ip", "username", "password", "bridge", "command_on", "command_off", "track_state", "payload_on", "payload_off", "off_delay", "command_low", "command_medium", "command_high", "command_max", "payload_low", "payload_medium", "payload_high", "payload_max", "command_open", "command_close", "command_pause", "payload_open", "payload_close", "payload_pause", "payload_active", "payload_inactive", "hvac"].each { n ->
             app?.deleteSetting("dev:${id}:${n}" as String)
         }
         // button
@@ -739,3 +748,4 @@ def settingUpdate(name, value, type=null) {
 private getHub() {
     return location.getHubs().find{ it.getType().toString() == 'PHYSICAL' }
 }
+
