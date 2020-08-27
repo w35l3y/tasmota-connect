@@ -16,7 +16,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-String appVersion() { return "1.0.7c" }
+String appVersion() { return "1.0.8a" }
 
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
@@ -135,6 +135,55 @@ def configureDevice(params){
                         title: "RF/IR Bridge",
                         description: "Select a RF/IR bridge to communicate with RF/IR device",
                         multiple: false, required: false, options: childDevicesByType(["Tasmota RF Bridge", "Tasmota IR Bridge"]), submitOnChange: true)
+            }
+        }
+        // Virtual Fan
+        if (moduleParameter && moduleParameter.settings.contains('virtualFan') && childSetting(state.currentId, "bridge") != null) {
+            section("RF/IR Code") {
+                input("dev:${state.currentId}:command_off", "text",
+                        title: "Command to send for 'OFF'",
+                        description: "Tap to set",
+                        defaultValue: "", required: false, submitOnChange: true)
+                input("dev:${state.currentId}:command_low", "text",
+                        title: "Command to send for 'Fan Speed LOW'",
+                        description: "Tap to set",
+                        defaultValue: "", required: false, submitOnChange: true)
+                input("dev:${state.currentId}:command_medium", "text",
+                        title: "Command to send for 'Fan Speed MEDIUM'",
+                        description: "Tap to set",
+                        defaultValue: "", required: false, submitOnChange: true)
+                input("dev:${state.currentId}:command_high", "text",
+                        title: "Command to send for 'Fan Speed HIGH'",
+                        description: "Tap to set",
+                        defaultValue: "", required: false, submitOnChange: true)
+                input("dev:${state.currentId}:track_state", "bool",
+                        title: "State tracking",
+                        description: "Enable real-time tracking",
+                        defaultValue: false, required: false, submitOnChange: true)
+
+                if (childSetting(state.currentId, "track_state")) {
+                    input("dev:${state.currentId}:payload_off", "text",
+                        title: "Code that represents the 'OFF' state",
+                        description: "Tap to set",
+                        defaultValue: "", required: false)
+                    input("dev:${state.currentId}:payload_low", "text",
+                        title: "Code that represents the 'LOW' state",
+                        description: "Tap to set",
+                        defaultValue: "", required: false)
+                    input("dev:${state.currentId}:payload_medium", "text",
+                        title: "Code that represents the 'MEDIUM' state",
+                        description: "Tap to set",
+                        defaultValue: "", required: false)
+                    input("dev:${state.currentId}:payload_high", "text",
+                        title: "Code that represents the 'HIGH' state",
+                        description: "Tap to set",
+                        defaultValue: "", required: false)
+                } else {
+                    deleteChildSetting(state.currentId, "payload_off")
+                    deleteChildSetting(state.currentId, "payload_low")
+                    deleteChildSetting(state.currentId, "payload_medium")
+                    deleteChildSetting(state.currentId, "payload_high")
+                }
             }
         }
         // Virtual Switch
@@ -581,7 +630,8 @@ def moduleMap() {
         "1116": [name: "Virtual 6-button", type: "Tasmota Virtual 6 Button"],
         "1117": [name: "Virtual Contact Sensor", type: "Tasmota Virtual Contact Sensor"],
         "1118": [name: "Virtual Motion Sensor", type: "Tasmota Virtual Motion Sensor"],
-        "1119": [name: "Virtual Air Conditioner", type: "Tasmota Virtual Air Conditioner"]
+        "1119": [name: "Virtual Air Conditioner", type: "Tasmota Virtual Air Conditioner"],
+        "1120": [name: "Virtual Fan", type: "Tasmota Virtual Fan"]
     ]
     def defaultModule = [
         "Tasmota Generic Switch":          [channel: 1, messaging: false,   virtual: false, child: ["Tasmota Child Switch Device"], settings: ["ip"]],
@@ -595,6 +645,7 @@ def moduleMap() {
         "Tasmota IR Bridge":               [channel: 1, messaging: true,    virtual: false, child: false, settings: ["ip"]],
         "Tasmota Virtual Contact Sensor":  [channel: 1, messaging: true,    virtual: true,  child: false, settings: ["virtualContactSensor", "bridge"]],
         "Tasmota Virtual Motion Sensor":   [channel: 1, messaging: true,    virtual: true,  child: false, settings: ["virtualMotionSensor", "bridge"]],
+        "Tasmota Virtual Fan":             [channel: 1, messaging: true,    virtual: true,  child: false, settings: ["virtualFan", "bridge"]],
         "Tasmota Virtual Switch":          [channel: 1, messaging: true,    virtual: true,  child: false, settings: ["virtualSwitch", "bridge"]],
         "Tasmota Virtual Shade":           [channel: 1, messaging: true,    virtual: true,  child: false, settings: ["virtualShade", "bridge"]],
         "Tasmota Virtual 1 Button":        [channel: 1, messaging: true,    virtual: true,  child: false, settings: ["virtualButton", "bridge"]],
@@ -670,7 +721,7 @@ def deleteChildSetting(id, name=null) {
         }
     } else if (id && name==null) {
         // otherwise, delete everything
-        ["ip", "username", "password", "bridge", "command_on", "command_off", "track_state", "payload_on", "payload_off", "off_delay", "command_open", "command_close", "command_pause", "payload_open", "payload_close", "payload_pause", "payload_active", "payload_inactive", "hvac"].each { n ->
+        ["ip", "username", "password", "bridge", "command_on", "command_off", "track_state", "payload_on", "payload_off", "off_delay", "command_low", "command_medium", "command_high", "payload_low", "payload_medium", "payload_high", "command_open", "command_close", "command_pause", "payload_open", "payload_close", "payload_pause", "payload_active", "payload_inactive", "hvac"].each { n ->
             app?.deleteSetting("dev:${id}:${n}" as String)
         }
         // button
