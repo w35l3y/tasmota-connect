@@ -18,7 +18,7 @@
  */
 
 metadata {
-    definition(name: "Tasmota Fan Light", namespace: "br.com.wesley", author: "w35l3y", ocfDeviceType: "oic.d.fan") {
+    definition(name: "Tasmota Virtual Fan", namespace: "br.com.wesley", author: "w35l3y", ocfDeviceType: "oic.d.fan") {
         capability "Switch"
         capability "Switch Level"
         capability "Fan Speed"
